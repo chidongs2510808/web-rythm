@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Online Rhythm Game</title>
+    <style>
+        body { background: #111; color: white; font-family: sans-serif; text-align: center; margin: 0; padding: 20px; }
+        #game-container { display: flex; justify-content: center; gap: 20px; margin-top: 10px; }
+        canvas { background: #222; border: 2px solid #555; }
+        .score-board { width: 150px; background: #333; padding: 15px; border-radius: 8px; text-align: left; }
+        #status { font-size: 20px; font-weight: bold; color: #4CAF50; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <h1>⚡ 실시간 1v1 리듬게임 ⚡</h1>
+    <div id="status">상대방 접속 대기 중...</div>
+    <p>조작키: <b>D</b>, <b>F</b>, <b>J</b>, <b>K</b></p>
+
+    <div id="game-container">
+        <canvas id="gameCanvas" width="320" height="600"></canvas>
+        <div class="score-board">
+            <h3>내 점수</h3>
+            <p>Score: <span id="my-score">0</span></p>
+            <p>Combo: <span id="my-combo">0</span></p>
+            <hr>
+            <h3>상대 점수</h3>
+            <p>Score: <span id="op-score">0</span></p>
+            <p>Combo: <span id="op-combo">0</span></p>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
