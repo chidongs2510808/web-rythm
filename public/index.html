@@ -2,77 +2,105 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Neon Rhythm Duel</title>
+    <title>Neon Rhythm: Battle Royale</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body { 
-            background: #0b0c10; 
-            color: #66fcf1; 
-            font-family: 'Orbitron', sans-serif; 
-            text-align: center; 
-            margin: 0; 
-            padding: 20px; 
-            overflow: hidden;
-        }
-        h1 { text-shadow: 0 0 10px #66fcf1; letter-spacing: 2px; margin-bottom: 5px; }
-        #status { font-size: 18px; color: #c5c6c7; margin-bottom: 20px; height: 20px; }
+        body { background: #0b0c10; color: #66fcf1; font-family: 'Orbitron', sans-serif; text-align: center; margin: 0; padding: 20px; overflow: hidden; }
+        h1 { text-shadow: 0 0 10px #66fcf1; letter-spacing: 2px; font-size: 40px; margin-bottom: 30px; }
         
-        #game-wrapper { 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            gap: 40px; 
-        }
+        /* 공통 UI 스타일 */
+        .screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80vh; }
+        .hidden { display: none !important; }
         
-        canvas { 
-            background: #1f2833; 
-            border: 3px solid #45a29e; 
-            border-radius: 8px;
-            box-shadow: 0 0 20px rgba(69, 162, 158, 0.5);
-        }
+        .panel { background: rgba(31, 40, 51, 0.9); padding: 30px; border: 2px solid #45a29e; border-radius: 12px; box-shadow: 0 0 20px rgba(102, 252, 241, 0.2); width: 400px; text-align: left; }
+        .panel h2 { text-align: center; color: #fff; margin-top: 0; border-bottom: 1px solid #45a29e; padding-bottom: 10px; }
         
-        .hud { 
-            width: 180px; 
-            background: rgba(31, 40, 51, 0.8); 
-            padding: 20px; 
-            border: 2px solid #45a29e; 
-            border-radius: 12px; 
-            box-shadow: 0 0 15px rgba(102, 252, 241, 0.3);
-            text-align: left;
-        }
-        .hud h3 { margin-top: 0; color: #fff; text-align: center; border-bottom: 1px solid #45a29e; padding-bottom: 10px; }
-        .hud p { font-size: 16px; margin: 15px 0; color: #c5c6c7; }
-        .score-val { font-size: 24px; font-weight: bold; color: #66fcf1; float: right; }
-        .combo-val { font-size: 24px; font-weight: bold; color: #ffeb3b; float: right; }
+        .form-group { margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        label { color: #c5c6c7; font-size: 14px; }
+        input[type="number"], input[type="text"], select { background: #0b0c10; border: 1px solid #45a29e; color: #66fcf1; padding: 8px; border-radius: 4px; width: 150px; font-family: 'Orbitron'; }
         
-        .controls { margin-top: 20px; color: #c5c6c7; font-size: 14px; }
-        .key { display: inline-block; background: #45a29e; color: #0b0c10; padding: 5px 10px; border-radius: 4px; font-weight: bold; margin: 0 5px; }
+        .btn { background: transparent; color: #66fcf1; border: 2px solid #66fcf1; padding: 12px 24px; font-size: 16px; font-family: 'Orbitron'; cursor: pointer; border-radius: 6px; transition: 0.3s; margin: 10px; font-weight: bold; }
+        .btn:hover { background: #66fcf1; color: #0b0c10; box-shadow: 0 0 15px #66fcf1; }
+        .btn.primary { background: #45a29e; color: #0b0c10; border-color: #45a29e; }
+        .btn.primary:hover { background: #66fcf1; border-color: #66fcf1; }
+        
+        /* 게임 화면 (기존) */
+        #game-wrapper { display: flex; justify-content: center; align-items: center; gap: 40px; margin-top: 20px; }
+        canvas { background: #1f2833; border: 3px solid #45a29e; border-radius: 8px; box-shadow: 0 0 20px rgba(69, 162, 158, 0.5); }
     </style>
 </head>
 <body>
     <h1>NEON RHYTHM DUEL</h1>
-    <div id="status">서버 연결 중...</div>
 
-    <div id="game-wrapper">
-        <!-- 내 점수판 -->
-        <div class="hud">
-            <h3>PLAYER (ME)</h3>
-            <p>SCORE <span id="my-score" class="score-val">0</span></p>
-            <p>COMBO <span id="my-combo" class="combo-val">0</span></p>
-        </div>
+    <!-- 1. 메인 로비 -->
+    <div id="lobby-screen" class="screen">
+        <button class="btn primary" id="btn-goto-create">방 만들기 (CREATE ROOM)</button>
+        <button class="btn" id="btn-goto-join">참가하기 (JOIN ROOM)</button>
+    </div>
 
-        <canvas id="gameCanvas" width="360" height="600"></canvas>
-
-        <!-- 상대 점수판 -->
-        <div class="hud">
-            <h3>OPPONENT</h3>
-            <p>SCORE <span id="op-score" class="score-val">0</span></p>
-            <p>COMBO <span id="op-combo" class="combo-val">0</span></p>
+    <!-- 2. 방 만들기 설정 -->
+    <div id="create-screen" class="screen hidden">
+        <div class="panel">
+            <h2>ROOM SETTINGS</h2>
+            <div class="form-group">
+                <label>참여 인원 (2~30)</label>
+                <input type="number" id="set-max-players" min="2" max="30" value="30">
+            </div>
+            <div class="form-group">
+                <label>공개 여부</label>
+                <select id="set-is-public">
+                    <option value="true">공개 (Public)</option>
+                    <option value="false">비공개 (Private)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>라운드별 생존자 수</label>
+                <input type="number" id="set-survivors" min="1" max="15" value="15">
+            </div>
+            <div class="form-group">
+                <label>패자부활전 여부</label>
+                <input type="checkbox" id="set-repechage">
+            </div>
+            <div class="form-group">
+                <label>등위 결정전 여부</label>
+                <input type="checkbox" id="set-placement">
+            </div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn primary" id="btn-create-room">생성 (CREATE)</button>
+                <button class="btn" id="btn-back-from-create">뒤로</button>
+            </div>
         </div>
     </div>
 
-    <div class="controls">
-        조작키: <span class="key">D</span> <span class="key">F</span> <span class="key">J</span> <span class="key">K</span>
+    <!-- 3. 방 참가하기 -->
+    <div id="join-screen" class="screen hidden">
+        <div class="panel" style="text-align: center;">
+            <h2>JOIN GAME</h2>
+            <div class="form-group" style="justify-content: center; gap: 10px;">
+                <input type="text" id="input-room-code" placeholder="초대 코드 입력 (예: A1B2)">
+                <button class="btn primary" id="btn-join-code">입장</button>
+            </div>
+            <hr style="border-color: #45a29e; margin: 20px 0;">
+            <button class="btn" id="btn-join-random">랜덤 공개방 빠른 참가</button>
+            <br>
+            <button class="btn" id="btn-back-from-join">뒤로</button>
+        </div>
+    </div>
+
+    <!-- 4. 대기실 -->
+    <div id="waiting-screen" class="screen hidden">
+        <h2 id="room-title">ROOM CODE: ----</h2>
+        <p>현재 인원: <span id="current-players">1</span> / <span id="max-players">30</span></p>
+        <p id="waiting-msg" style="color: #ffeb3b;">다른 플레이어를 기다리는 중...</p>
+        <button class="btn primary hidden" id="btn-start-game">게임 시작 (방장 전용)</button>
+    </div>
+
+    <!-- 5. 게임 플레이 화면 (숨김 상태) -->
+    <div id="game-screen" class="screen hidden">
+        <div id="game-wrapper">
+            <canvas id="gameCanvas" width="360" height="600"></canvas>
+            <!-- 30명 배틀로얄이므로 점수판 UI는 추후 랭킹 리스트 형태로 개편 필요 -->
+        </div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
